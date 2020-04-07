@@ -59,6 +59,7 @@ struct _Pos
 
 //图片数组
 IMAGE images[ALL];
+IMAGE bg_img;
 
 //人的坐标
 struct _Pos coor_xy;
@@ -98,6 +99,15 @@ void gameControl(enum _DIRECTION direct);
 
 void control();//按键控制
 
+/* 判断游戏是否达到结束条件 LINE][COLUMN] */
+bool complete();
+
+/* 游戏结束后,切换背景 */
+void victory(IMAGE *bg_img);
+
+
+
+
 
 int main(void)
 {
@@ -107,6 +117,8 @@ int main(void)
 	control();//控制
 
 	system("pause");
+
+	closegraph();//释放资源
 	return 0;
 }
 
@@ -117,7 +129,6 @@ int main(void)
 //地图窗口
 void img()
 {
-	IMAGE bg_img;
 
 	initgraph(SCREEN_WLDTH, SCREEN_HEIGHT);//设置窗口大小
 	//加载   背景图片								图片大小				是否图片延申
@@ -174,8 +185,8 @@ void gameControl(enum _DIRECTION direct)
 {
 
 	//定义人物下一个道具的坐标变量
-	struct _Pos next_pos = coor_xy;
-	struct _Pos next_next_pos = coor_xy;
+	struct _Pos next_pos = coor_xy;			//人物移动方向的前一个位置
+	struct _Pos next_next_pos = coor_xy;	//箱子移动方向的前一个位置
 
 
 	//根据方向获取下一个坐标位置
@@ -223,7 +234,7 @@ void gameControl(enum _DIRECTION direct)
 		//第二种
 		else if (map[next_next_pos.x][next_next_pos.y] == BOX_DES)
 		{
-			changeMap(&next_next_pos, HIT);//变成箱子
+			changeMap(&next_next_pos, HIT);//变成箱子目的地
 			changeMap(&next_pos, MAN);		//变成人
 			changeMap(&coor_xy, FLOOR);		//变成地板
 			coor_xy = next_pos;
@@ -318,7 +329,41 @@ void control()
 			else if (ch == KEY_QUIT) {
 				quit = true;
 			}
+
+			//判断游戏是否达到结束条件
+			if (complete())
+			{
+				victory(&bg_img);
+
+				quit = true;
+			}
 		}
 		Sleep(100);//休眠0.1秒
 	} while (quit == false);//或者!quit
+}
+
+/* 判断游戏是否达到结束条件 */
+bool complete()
+{
+	for (int i = 0; i < LINE; i++)
+	{
+		for (int j = 0; j < COLUMN; j++)
+		{
+			if (map[i][j] == BOX_DES)return false;
+		}
+	}
+	return true;
+}
+
+/* 游戏结束后,切换背景 */
+void victory(IMAGE *bg_img)
+{
+	putimage(0, 0, bg_img);//打印背景
+
+	settextcolor(WHITE);//白色
+	RECT rec = { 0,0,SCREEN_WLDTH,SCREEN_HEIGHT };
+	settextstyle(20, 0,_T( "黑体"));
+
+	drawtext(_T("恭喜你,成为推箱子老司机."), &rec, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
 }
